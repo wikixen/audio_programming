@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 /**
  * This program calculates the frequency of a MIDI note number
@@ -25,17 +26,18 @@ int main()
     printf("ERROR: There was an error reading your input.\n");
     return 1;
   }
+  message[strcspn(message, "\n")] = '\0';
 
   if (message[0]=='\0')
   {
     printf("Have a nice day!\n");
-    return 1;
+    return 0;
   }
   
   int midinote = atoi(message);
   if (midinote<0 || midinote>127)
   {
-    printf("ERROR: %s isn't a valid MIDI note. Make sure your note is in the range 0-127.\n");
+    printf("ERROR: %s isn't a valid MIDI note. Make sure your note is in the range 0-127.\n", message);
     return 1;
   }
   
