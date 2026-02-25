@@ -26,7 +26,7 @@ int main()
     printf("ERROR: There was an error reading your input.\n");
     return 1;
   }
-  message[strcspn(message, "\n")] = '\0';
+  message[strcspn(message, "\n")] = '\0'; // Strips '\n' from message & replaces it with '\0'
 
   if (message[0]=='\0')
   {
