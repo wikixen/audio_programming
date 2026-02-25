@@ -13,11 +13,11 @@ int main()
    * c5 = frequency of Middle C ie MIDI note 60
    */
   double semitone_ratio, c5, c0;
-  semitone_ratio = pow(2, 1.0 / 12.0),
-  c5 = 220.0 * pow(semitone_ratio, 3.0),
+  semitone_ratio = pow(2, 1.0 / 12.0);
+  c5 = 220.0 * pow(semitone_ratio, 3.0);
   c0 = c5 * pow(0.5, 5.0);
 
-  double frequency = 430.0;
+  double frequency = 420.0;
 
   double fracmidi = log(frequency/c0)/log(semitone_ratio);
   int midinote = (int)(fracmidi + 0.5);
@@ -25,24 +25,15 @@ int main()
   printf("The nearest MIDI note to the frequency %.2f is %d\n", frequency, midinote);
   
   // Exercise 1.2.6 PG.77
-  int midiL, midiH;
-  midiL = floor(fracmidi),
-  midiH = ceil(fracmidi);
+  // Get closest MIDI note above & below frequency
+  double freqL = c0 * pow(semitone_ratio, floor(fracmidi));
+  double freqH = c0 * pow(semitone_ratio, ceil(fracmidi));
+  double freqRange = freqH - freqL;
 
-  double freqL = c0 * pow(semitone_ratio, midiL);
-  double freqH = c0 * pow(semitone_ratio, midiH);
+  double midinoteFreq = c0 * pow(semitone_ratio, midinote);
 
-  int bend = 0;
-  // If the frequency is closer to the higher frequency the frequency-(higher frequency), else frequency-(lower frequenct)
-  if (midiH == fracmidi)
-  {
-    bend = (int)(((freqH - frequency) / (freqH - freqL)) * 100);
-  }
-  else
-  {
-    bend = (int)(((freqL - frequency) / (freqH - freqL)) * 100);
-  }
-  
+  int bend = (int)(((frequency - midinoteFreq) / freqRange) * 100);
+
   printf("pitchbend = %d%%\n", bend);
 
   return 0;

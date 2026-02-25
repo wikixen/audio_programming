@@ -14,8 +14,8 @@ int main()
    * c5 = frequency of Middle C ie MIDI note 60
    */
   double semitone_ratio, c5, c0;
-  semitone_ratio = pow(2, 1.0 / 12.0),
-  c5 = 220.0 * pow(semitone_ratio, 3.0),
+  semitone_ratio = pow(2, 1.0 / 12.0);
+  c5 = 220.0 * pow(semitone_ratio, 3.0);
   c0 = c5 * pow(0.5, 5.0);
 
   printf("Enter a MIDI note(0-127): ");
@@ -45,8 +45,8 @@ int main()
   // Exercise 1.2.5 PG.77
   // Only works for MIDI note 60-72 ie one octave
   double c0_length, c5_length, length_interval;
-  c0_length = 660,
-  c5_length = 330,
+  c0_length = 660;
+  c5_length = 330;
   length_interval = (c0_length - c5_length) / 12;
 
   double midinote_length = 330+((midinote%12) * length_interval);
