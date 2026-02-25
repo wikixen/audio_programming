@@ -20,7 +20,7 @@ int main()
 
   printf("Enter a MIDI note(0-127): ");
   char message[256];
-  if (gets(message)==NULL)
+  if (fgets(message, sizeof(message), stdin) == NULL)
   {
     printf("ERROR: There was an error reading your input.\n");
     return 1;
