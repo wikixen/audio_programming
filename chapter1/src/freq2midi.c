@@ -13,9 +13,9 @@ int main(int argc, char *argv[])
   if (argc != 4)
   {
     printf("%s : finds the MIDI note closest to frequency.\n", argv[0]);
-    printf("  usage: %s rootA MIDInote octaveDivision\n", argv[0]);
+    printf("  usage: %s rootA frequency octaveDivision\n", argv[0]);
     printf("  range: 0 <= rootA\n");
-    printf("  range: 0 <= MIDInote <= 127\n");
+    printf("  range: 0 <= frequency\n");
     printf("  range: 5 <= octaveDivision\n");
 
     return 1;
@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // a4 is the root A frequency in Hz
   double frequency = strtof(argv[2], NULL);
   if (frequency < 0)
   {
