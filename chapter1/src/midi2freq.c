@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
   // a4 is the root A frequency in Hz
   double a4 = strtof(argv[1], NULL);
-  if (a4 < 0)
+  if (a4 <= 0)
   {
     printf("ERROR: %s frequency isn't a valid root frequency. Enter a value 0 or greater.\n", argv[1]);
     return 1;
