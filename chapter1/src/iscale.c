@@ -29,16 +29,15 @@ int main(int argc, char const *argv[])
     if (argv[1][0] == '-')
     {
       char flag = argv[1][1];
-      if (flag == 'm')
+      switch (flag)
       {
+      case 'm':
         mFlag = 1; // Set to true if -m flag is used
-      }
-      else if (flag == 'i')
-      {
-        iFlag = 1; // Set to t true if -i flag is used
-      }
-      else
-      {
+        break;
+      case 'i':
+        iFlag = 1; // Set to true if -i flag is used
+        break;
+      default:
         printf("ERROR: incorrect flag option %s\n", argv[1]);
         return 1;
       }
