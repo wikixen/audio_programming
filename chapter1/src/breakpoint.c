@@ -1,132 +1,30 @@
 // breakpoint.c allows for use of breakpoint files
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include "breakpoint.h"
 
 /**
- * usage: breakpoint [-c] [-n] [-s] [-d] [-t] [-i]  infile.txt 
- * -c: stretch/shrink times
+ * usage: breakpoint [-n number] [-c number] [-s number] [-t number] [-i number]  infile.txt
  * -n: normalize breakpoint values relative to a max value
+ * -c: scale breakpoint values by a factor
  * -s: shift breakpoint array up or down
- * -d: scale breakpoint values by a factor
- * -t: truncate/extend duration
+ * -t: truncate duration by a number between 0 or 1
  * -i: insert/delete point in array
  */
 
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
-
-// SFINFO is an object that describes a soundfile
-typedef struct
-{
-  DWORD nSamples;
-  DWORD sampleRate;
-  WORD nChannels;
-  char *name;
-} SFINFO;
-
-typedef struct 
-{
-  double time;
-  double value;
-} BREAKPOINT;
-
-
-BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints);
-BREAKPOINT *get_breakpoints(FILE *fp, long *pSize);
-
-// max_point finds the largest value of a provided breakpoint file
-BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints){
-  BREAKPOINT point;
-  for (size_t i = 0; i < nPoints; i++)
-  {
-    if (point.value < points[i].value)
-    {
-      point.time = points[i].time;
-      point.value = points[i].value;
-      
-    }
-  }
-
-  return point;
-}
-
-BREAKPOINT *get_breakpoints(FILE *fp, long *pSize)
-{
-  if (fp == NULL)
-  {
-    return NULL;
-  }
-
-  long size = 64;
-  BREAKPOINT *points = (BREAKPOINT *)malloc(sizeof(BREAKPOINT) * size);
-  if (points == NULL)
-  {
-    return NULL;
-  }
-
-  char line[80];
-  int got = 0;
-  unsigned long nPoints = 0;
-  float lastTime = 0.0;
-  while (fgets(line, 80, fp))
-  {
-    got = sscanf(line, "%lf:%lf", &points[nPoints].time, &points[nPoints].value);
-    if (got<0)
-    {
-      continue;
-    }
-    if (got==0)
-    {
-      printf("Line %lu has non-numeric data\n", nPoints++);
-      break;
-    }
-    if (got == 1)
-    {
-      printf("Incomplete breakpoint found at point %lu\n", nPoints++);
-      break;
-    }
-    if (points[nPoints].time < lastTime)
-    {
-      printf("data error at point %lu: time not increasing\n", nPoints++);
-      break;
-    }
-    
-    lastTime = points[nPoints].time;
-    if (++nPoints == size)
-    {
-      BREAKPOINT *tmp;
-      // size += NPOINTS;??
-      size += nPoints;
-      tmp = (BREAKPOINT *)realloc(points, sizeof(BREAKPOINT) * size);
-      if (tmp == NULL) // Release memory & return NULL
-      {
-        nPoints = 0;
-        free(points);
-        points = NULL;
-        break;
-      }
-      points = tmp;
-    }
-  }
-  if (nPoints)
-  {
-    *pSize = nPoints;
-  }
-
-  return points;
-}
-
 int main(int argc, char const *argv[])
-{ 
+{
   printf("breakpoint: Find the duration of breakpoint file\n");
   if (argc < 2)
   {
-    printf("usage: breakpoint [-s] []  infile.txt \n");
-    
+    printf("usage: breakpoint [-n number] [-c number] [-s number] [-t number] [-i number] infile.txt \n");
+
     return 0;
   }
 
-  int cFlag = 0, nFlag = 0, sFlag = 0, dFlag = 0, tFlag = 0, iFlag = 0;
+  int cFlag = 0, nFlag = 0, sFlag = 0, tFlag = 0, iFlag = 0;
+  int cValue = 0, nValue = 0, sValue = 0, tValue = 0, iValue = 0;
   while (argc > 2)
   {
     if (argv[1][0] == '-')
@@ -134,17 +32,14 @@ int main(int argc, char const *argv[])
       char flag = argv[1][1];
       switch (flag)
       {
-      case 'c':
-        cFlag = 1;
-        break;
       case 'n':
         nFlag = 1;
         break;
+      case 'c':
+        cFlag = 1;
+        break;
       case 's':
         sFlag = 1;
-        break;
-      case 'd':
-        dFlag = 1;
         break;
       case 't':
         tFlag = 1;
@@ -159,7 +54,8 @@ int main(int argc, char const *argv[])
       argc--;
       argv++;
     }
-    else{
+    else
+    {
       break;
     }
   }
@@ -169,9 +65,9 @@ int main(int argc, char const *argv[])
   {
     return 0;
   }
-  
+
   long size = 0;
-  BREAKPOINT *points = get_breakpoints(fp, &size);
+  BREAKPOINT *points = get_breakpoints(fp, &size, tFlag);
   if (points == NULL)
   {
     printf("No breakpoints read.\n");
@@ -195,6 +91,28 @@ int main(int argc, char const *argv[])
     return 1;
   }
 
+  // Flag manipulations
+  if (nFlag == true)
+  {
+    
+  }
+  
+  if (sFlag == true)
+  {
+    for (size_t i = 0; i < size; i++)
+    {
+      points[i].value += 1;
+    }
+  }
+  if (cFlag == true)
+  {
+    for (size_t i = 0; i < size; i++)
+    {
+      points[i].value *= 2;
+    }
+  }
+  
+  
   printf("read %d breakpoints\n", size);
   double duration = points[size--].time;
   printf("duration: %f seconds\n", duration);
@@ -202,6 +120,94 @@ int main(int argc, char const *argv[])
   printf("max value: %f at %f secs\n", point.value, point.time);
   free(points);
   fclose(fp);
-
+  
   return 0;
+}
+
+// max_point finds the largest value of a provided breakpoint file
+BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints)
+{
+  BREAKPOINT point;
+  for (size_t i = 0; i < nPoints; i++)
+  {
+    if (point.value < points[i].value)
+    {
+      point.time = points[i].time;
+      point.value = points[i].value;
+    }
+  }
+
+  return point;
+}
+
+BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
+{
+  if (fp == NULL)
+  {
+    return NULL;
+  }
+
+  long size = 64;
+  BREAKPOINT *points = (BREAKPOINT *)malloc(sizeof(BREAKPOINT) * size);
+  if (points == NULL)
+  {
+    return NULL;
+  }
+
+  char line[80];
+  int got = 0;
+  unsigned long nPoints = 0;
+  float lastTime = 0.0;
+  while (fgets(line, 80, fp))
+  {
+    got = sscanf(line, "%lf:%lf", &points[nPoints].time, &points[nPoints].value);
+    if (got < 0)
+    {
+      continue;
+    }
+    if (got == 0)
+    {
+      printf("Line %lu has non-numeric data\n", nPoints++);
+      break;
+    }
+    if (got == 1)
+    {
+      printf("Incomplete breakpoint found at point %lu\n", nPoints++);
+      break;
+    }
+    if (points[nPoints].time < lastTime)
+    {
+      printf("data error at point %lu: time not increasing\n", nPoints++);
+      break;
+    }
+
+    printf("%f\n", lastTime);
+    if (tFlag == true && points[nPoints].time == 0.60)
+    {
+      break;
+    }
+    
+    lastTime = points[nPoints].time;
+
+    if (++nPoints == size)
+    {
+      BREAKPOINT *tmp;
+      size += nPoints;
+      tmp = (BREAKPOINT *)realloc(points, sizeof(BREAKPOINT) * size);
+      if (tmp == NULL) // Release memory & return NULL
+      {
+        nPoints = 0;
+        free(points);
+        points = NULL;
+        break;
+      }
+      points = tmp;
+    }
+  }
+  if (nPoints)
+  {
+    *pSize = nPoints;
+  }
+
+  return points;
 }
