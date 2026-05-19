@@ -16,5 +16,12 @@ typedef struct
   double value;
 } BREAKPOINT;
 
+typedef struct
+{
+  bool state;
+  double value;
+} FLAG;
+
 BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints);
-BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag);
+BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, FLAG tFlag);
+BREAKPOINT *alter_breakpoint(BREAKPOINT *points, FLAG *flags, long size);

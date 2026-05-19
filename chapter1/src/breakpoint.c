@@ -5,7 +5,7 @@
 #include "breakpoint.h"
 
 /**
- * usage: breakpoint [-n number] [-c number] [-s number] [-t number] [-i number]  infile.txt
+ * usage: breakpoint [-n number] [-c number] [-s number] [-t timestamp number] [-i ins/del timestamp]  infile.txt
  * -n: normalize breakpoint values relative to a max value
  * -c: scale breakpoint values by a factor
  * -s: shift breakpoint array up or down
@@ -18,13 +18,23 @@ int main(int argc, char const *argv[])
   printf("breakpoint: Find the duration of breakpoint file\n");
   if (argc < 2)
   {
-    printf("usage: breakpoint [-n number] [-c number] [-s number] [-t number] [-i number] infile.txt \n");
+    printf("usage: breakpoint [-n number] [-c number] [-s number] [-t timestamp number] infile.txt \n");
+    printf("\t-n: normalize breakpoint values relative to a max value\n");
+    printf("\t-c: scale breakpoint values by a factor\n");
+    printf("\t-s: shift breakpoint array up or down\n");
+    printf("\t-t: truncate duration by a number between 0 or 1\n");
 
     return 0;
   }
 
-  int cFlag = 0, nFlag = 0, sFlag = 0, tFlag = 0, iFlag = 0;
-  int cValue = 0, nValue = 0, sValue = 0, tValue = 0, iValue = 0;
+  FLAG flags[4] = {
+      {false, 0}, // n
+      {false, 0}, // c
+      {false, 0}, // s
+      {false, 0}, // t
+  };
+
+  int check = 0;
   while (argc > 2)
   {
     if (argv[1][0] == '-')
@@ -33,24 +43,42 @@ int main(int argc, char const *argv[])
       switch (flag)
       {
       case 'n':
-        nFlag = 1;
+        flags[0].state = 1;
+        flags[0].value = strtof(argv[1 + 1], NULL);
+        check++;
         break;
       case 'c':
-        cFlag = 1;
+        flags[1].state = 1;
+        flags[1].value = strtof(argv[1 + 1], NULL);
+        check++;
         break;
       case 's':
-        sFlag = 1;
+        flags[2].state = 1;
+        flags[2].value = strtof(argv[1 + 1], NULL);
+        check++;
         break;
       case 't':
-        tFlag = 1;
-        break;
-      case 'i':
-        iFlag = 1;
+        flags[3].state = 1;
+        flags[3].value = strtof(argv[1 + 1], NULL);
+        if (flags[3].value < 0 || flags[3].value > 1)
+        {
+          printf("ERROR: t flag value must be within the range 0-1\n");
+          return 1;
+        }
+        check++;
         break;
       default:
         printf("ERROR: incorrect flag option %s\n", argv[1]);
         return 1;
       }
+
+      if (check > 0)
+      {
+        argc--;
+        argv++;
+        check = 0;
+      }
+
       argc--;
       argv++;
     }
@@ -59,15 +87,16 @@ int main(int argc, char const *argv[])
       break;
     }
   }
-
   FILE *fp = fopen(argv[1], "r");
   if (fp == NULL)
   {
+    printf("ERROR: Could not open file '%s'. Make sure the path is correct.\n", argv[argc-1]);
     return 0;
   }
 
   long size = 0;
-  BREAKPOINT *points = get_breakpoints(fp, &size, tFlag);
+  // flags[3] is t(runcate) flag
+  BREAKPOINT *points = get_breakpoints(fp, &size, flags[3]);
   if (points == NULL)
   {
     printf("No breakpoints read.\n");
@@ -92,42 +121,28 @@ int main(int argc, char const *argv[])
   }
 
   // Flag manipulations
-  if (nFlag == true)
+
+  // n, c, or s flag == true
+  if (flags[0].state == true || flags[1].state == true || flags[2].state == true)
   {
-    
+    points = alter_breakpoint(points, flags, size);
   }
-  
-  if (sFlag == true)
-  {
-    for (size_t i = 0; i < size; i++)
-    {
-      points[i].value += 1;
-    }
-  }
-  if (cFlag == true)
-  {
-    for (size_t i = 0; i < size; i++)
-    {
-      points[i].value *= 2;
-    }
-  }
-  
-  
-  printf("read %d breakpoints\n", size);
-  double duration = points[size--].time;
+
+  printf("read %ld breakpoints\n", size);
+  double duration = points[size-1].time;
   printf("duration: %f seconds\n", duration);
   BREAKPOINT point = max_point(points, size);
   printf("max value: %f at %f secs\n", point.value, point.time);
   free(points);
   fclose(fp);
-  
+
   return 0;
 }
 
 // max_point finds the largest value of a provided breakpoint file
 BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints)
 {
-  BREAKPOINT point;
+  BREAKPOINT point = points[0];
   for (size_t i = 0; i < nPoints; i++)
   {
     if (point.value < points[i].value)
@@ -140,7 +155,7 @@ BREAKPOINT max_point(const BREAKPOINT *points, unsigned long nPoints)
   return point;
 }
 
-BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
+BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, FLAG tFlag)
 {
   if (fp == NULL)
   {
@@ -158,9 +173,11 @@ BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
   int got = 0;
   unsigned long nPoints = 0;
   float lastTime = 0.0;
+
+  BREAKPOINT tempPoint = {0, 0};
   while (fgets(line, 80, fp))
   {
-    got = sscanf(line, "%lf:%lf", &points[nPoints].time, &points[nPoints].value);
+    got = sscanf(line, "%lf:%lf", &tempPoint.time, &tempPoint.value);
     if (got < 0)
     {
       continue;
@@ -175,19 +192,21 @@ BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
       printf("Incomplete breakpoint found at point %lu\n", nPoints++);
       break;
     }
-    if (points[nPoints].time < lastTime)
+    if (tempPoint.time < lastTime)
     {
       printf("data error at point %lu: time not increasing\n", nPoints++);
       break;
     }
 
-    printf("%f\n", lastTime);
-    if (tFlag == true && points[nPoints].time == 0.60)
+    // Truncates file to requested time
+    if (tFlag.state == true && tempPoint.time >= tFlag.value)
     {
       break;
     }
-    
-    lastTime = points[nPoints].time;
+
+    points[nPoints].time = tempPoint.time;
+    points[nPoints].value = tempPoint.value;
+    lastTime = tempPoint.time;
 
     if (++nPoints == size)
     {
@@ -204,6 +223,8 @@ BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
       points = tmp;
     }
   }
+
+  // Check that file size>0
   if (nPoints)
   {
     *pSize = nPoints;
@@ -211,3 +232,25 @@ BREAKPOINT *get_breakpoints(FILE *fp, long *pSize, bool tFlag)
 
   return points;
 }
+
+BREAKPOINT *alter_breakpoint(BREAKPOINT *points, FLAG *flags, long size)
+{
+  BREAKPOINT max = max_point(points, size);
+  for (size_t i = 0; i < size; i++)
+  {
+    if (flags[0].state == true)
+    {
+      points[i].value = (points[i].value/max.value) * flags[0].value;
+    }
+    if (flags[1].state == true)
+    {
+      points[i].value *= flags[1].value;
+    }
+    if (flags[2].state == true)
+    {
+      points[i].value += flags[2].value;
+    }
+  }
+  return points;
+}
+
