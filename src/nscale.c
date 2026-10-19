@@ -1,12 +1,13 @@
+/**
+ * This is from Chpater 1 of the Audio Programming in C book
+ * 
+ * nscale displays the frequencies of equal-tempered intervals for N notes per octave
+ * 24 is the max amount of notes that can be shown; Chosen for readability
+ * Frequency = (Root A) * 2^[(Midinote)-(Middle C Midinote ie 69)/ notes] 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-/*
-`* nscale displays the frequencies of equal-tempered intervals for N notes per octave
- * 24 is the max amount of notes that can be shown; Chosen for readability
- * Frequency = (Root A) * 2^[(Midinote)-(Middle C Midinote ie 69)/ notes] 
-*/
 
 int main(int argc, char const *argv[])
 {

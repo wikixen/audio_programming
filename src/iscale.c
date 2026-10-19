@@ -1,4 +1,8 @@
-// Generates ET tables for N-notes to the octave (N<=24)
+/**
+ * This is from Chpater 1 of the Audio Programming in C book
+ * 
+ * Generates ET tables for N-notes to the octave (N<=24)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

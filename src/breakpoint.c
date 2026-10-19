@@ -1,18 +1,20 @@
-// This is from Chpater 1 of the Audio Programming in C book
-// breakpoint.c allows for use of breakpoint files
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include "../lib/breakpoint.h"
-
 /**
- * usage: breakpoint [-n number] [-c number] [-s number] [-t timestamp number] [-i ins/del timestamp]  infile.txt
+ * This is from Chpater 1 of the Audio Programming in C book
+ * 
+ * Allows for the editing of audio breakpoint files
+ * 
+ * * usage: breakpoint [-n number] [-c number] [-s number] [-t timestamp number] [-i ins/del timestamp]  infile.txt
  * -n: normalize breakpoint values relative to a max value
  * -c: scale breakpoint values by a factor
  * -s: shift breakpoint array up or down
  * -t: truncate duration by a number between 0 or 1
  * -i: insert/delete point in array
  */
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include "../lib/breakpoint.h"
+
 
 int main(int argc, char const *argv[])
 {

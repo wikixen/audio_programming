@@ -1,11 +1,13 @@
+/**
+ * This is from Chpater 1 of the Audio Programming in C book
+ * 
+ * This program calculates the closest MIDI note to the provided frequency as well as it's pitch bend
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
-/**
- * This program calculates the closest MIDI note to the provided frequency as well as it's pitch bend
- */
 
 int main(int argc, char *argv[])
 {

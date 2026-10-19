@@ -1,11 +1,12 @@
+/**
+ * This is from Chpater 1 of the Audio Programming in C book
+ * 
+ * This program calculates the frequency of a MIDI note number
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-
-/**
- * This program calculates the frequency of a MIDI note number
- */
 
 int main(int argc, char *argv[])
 {
