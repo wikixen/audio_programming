@@ -1,8 +1,9 @@
+// This is from Chpater 1 of the Audio Programming in C book
 // breakpoint.c allows for use of breakpoint files
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "breakpoint.h"
+#include "../lib/breakpoint.h"
 
 /**
  * usage: breakpoint [-n number] [-c number] [-s number] [-t timestamp number] [-i ins/del timestamp]  infile.txt
